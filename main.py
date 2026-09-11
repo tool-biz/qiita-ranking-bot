@@ -65,10 +65,10 @@ for i, item in enumerate(sorted_items, 1):
     )
     summary = None
 
-    for attempt in range(20):
+    for attempt in range(10):
         try:
             gemini_res = client.models.generate_content(
-                model="gemini-3.5-flash",
+                model="gemini-3.6-flash",
                 contents=prompt,
             )
             if gemini_res and gemini_res.text:
@@ -78,7 +78,7 @@ for i, item in enumerate(sorted_items, 1):
                 break
         except Exception as e:
             print(f"  └ リトライ ({attempt + 1}/10): {e}", flush=True)
-            time.sleep(30)
+            time.sleep(5)
 
     markdown += f"### {i} 位: [{title}]({url})\n"
     markdown += f"{tags_formatted}\n\n"
@@ -90,7 +90,7 @@ for i, item in enumerate(sorted_items, 1):
     markdown += f"[@{user_id}](https://qiita.com/{user_id}) さん ( {created_at} に投稿 )\n\n"
 
     # レート制限（429エラー）を回避するため、1件ごとに4秒確実に待機
-    time.sleep(4)
+    time.sleep(10)
 
 # 3. Qiitaへ更新
 payload = {
