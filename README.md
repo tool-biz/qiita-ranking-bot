@@ -1,0 +1,1 @@
+# qiita-ranking-bot
