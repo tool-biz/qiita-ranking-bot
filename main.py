@@ -1,17 +1,17 @@
-# Qiitaの「初心者」タグ記事を週間集計し、Gemini 3.5 Flashで要約を付与して自動投稿・更新するスクリプト
+# Qiitaの「初心者」タグ記事を週間集計し、Geminiで要約を付与して自動投稿・更新するスクリプト
 import os
 import re
 import time
 from datetime import datetime, timedelta, timezone
-import google.generativeai as genai
+from google import genai
 import requests
 
 QIITA_TOKEN = os.getenv("QIITA_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 QIITA_ARTICLE_ID = os.getenv("QIITA_ARTICLE_ID", "")
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-3.5-flash")
+# 新しいSDKの初期化
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 headers = {
     "Authorization": f"Bearer {QIITA_TOKEN}",
@@ -65,9 +65,12 @@ for i, item in enumerate(sorted_items, 1):
     )
     summary = None
 
-    for attempt in range(10):
+    for attempt in range(20):
         try:
-            gemini_res = model.generate_content(prompt)
+            gemini_res = client.models.generate_content(
+                model="gemini-3.5-flash",
+                contents=prompt,
+            )
             if gemini_res and gemini_res.text:
                 summary = gemini_res.text.strip()
                 summary = re.sub(r"[\（\(]\d+文字[\）\)]", "", summary).strip()
@@ -75,7 +78,7 @@ for i, item in enumerate(sorted_items, 1):
                 break
         except Exception as e:
             print(f"  └ リトライ ({attempt + 1}/10): {e}", flush=True)
-            time.sleep(5)
+            time.sleep(30)
 
     markdown += f"### {i} 位: [{title}]({url})\n"
     markdown += f"{tags_formatted}\n\n"
