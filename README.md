@@ -1,7 +1,5 @@
 # qiita-ranking-bot
 
-# qiita-ranking-bot
-
 Qiita API × Gemini API × GitHub Actions で、
 「初心者」タグのQiita記事を週間ランキング化する自動化ボットです。
 
