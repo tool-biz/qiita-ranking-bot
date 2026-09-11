@@ -44,6 +44,8 @@ markdown += "また、各記事の概要を把握しやすいよう、Gemini API
 markdown += "--- \n\n"
 markdown += "## いいね数ランキング\n\n"
 
+print("--- 要約生成を開始します ---", flush=True)
+
 for i, item in enumerate(sorted_items, 1):
     title = item["title"]
     url = item["url"]
@@ -55,6 +57,8 @@ for i, item in enumerate(sorted_items, 1):
 
     tags_formatted = " ".join([f"`{t['name']}`" for t in item["tags"]])
 
+    print(f"[{i}/10] 要約中: {title[:20]}...", flush=True)
+
     prompt = (
         f"以下の技術記事を、初心者向けに30文字以内でキャッチーに一言で要約してください。\n"
         f"※「29文字」や「（26文字）」のような文字数カウントや余計な注釈は絶対に含めず、要約文のみを出力してください。\n"
@@ -62,15 +66,17 @@ for i, item in enumerate(sorted_items, 1):
     )
     summary = None
 
-    for attempt in range(20):
+    for attempt in range(10):
         try:
             gemini_res = model.generate_content(prompt)
             if gemini_res and gemini_res.text:
                 summary = gemini_res.text.strip()
                 summary = re.sub(r"[\（\(]\d+文字[\）\)]", "", summary).strip()
+                print("  └ 成功", flush=True)
                 break
-        except Exception:
-            time.sleep(8)
+        except Exception as e:
+            print(f"  └ リトライ ({attempt + 1}/10): {e}", flush=True)
+            time.sleep(5)
 
     markdown += f"### {i} 位: [{title}]({url})\n"
     markdown += f"{tags_formatted}\n\n"
@@ -80,6 +86,9 @@ for i, item in enumerate(sorted_items, 1):
 
     markdown += f"**{likes}** いいね / **{stocks}** ストック\n"
     markdown += f"[@{user_id}](https://qiita.com/{user_id}) さん ( {created_at} に投稿 )\n\n"
+
+    # レート制限（429エラー）を回避するため、1件ごとに4秒確実に待機
+    time.sleep(4)
 
 # 3. Qiitaへ更新
 payload = {
@@ -99,6 +108,6 @@ if QIITA_ARTICLE_ID:
     patch_url = f"https://qiita.com/api/v2/items/{QIITA_ARTICLE_ID}"
     res = requests.patch(patch_url, headers=headers, json=payload)
     if res.status_code == 200:
-        print("✅ 記事の自動更新が完了しました！")
+        print("✅ 記事の自動更新が完了しました！", flush=True)
     else:
-        print(f"❌ 更新失敗: {res.status_code} - {res.text}")
+        print(f"❌ 更新失敗: {res.status_code} - {res.text}", flush=True)
