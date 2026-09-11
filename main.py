@@ -36,11 +36,9 @@ sorted_items = sorted(items, key=lambda x: x["likes_count"], reverse=True)[:10]
 
 # 2. Markdown本文の作成
 markdown = "## 集計について\n"
-markdown += (
-    f"本記事は、Qiita APIを利用して「**初心者**」タグがつけられた記事を対象に、"
-    f"直近1週間（{one_week_ago} ～ {today_str}）で獲得されたいいね数を集計し、ランキング形式で自動更新しています。\n"
-)
-markdown += "また、各記事の概要を把握しやすいよう、Gemini APIを活用して初心者向けの一言要約を自動付与しています。\n\n"
+markdown += f"・集計期間：（{one_week_ago} ～ {today_str}）\n"
+markdown += "・集計対象：「初心者」タグのついた記事\n"
+markdown += "・集計方法：直近一週間のいいね数に応じたランキングを自動作成\n\n"
 markdown += "--- \n\n"
 markdown += "## いいね数ランキング\n\n"
 
@@ -55,7 +53,8 @@ for i, item in enumerate(sorted_items, 1):
     created_at = item["created_at"][:10]
     body = item["body"][:2000]
 
-    tags_formatted = " ".join([f"`{t['name']}`" for t in item["tags"]])
+    # タグをQiitaのタグページへのリンクに変換
+    tags_formatted = " ".join([f"[`{t['name']}`](https://qiita.com/tags/{t['name']})" for t in item["tags"]])
 
     print(f"[{i}/10] 要約中: {title[:20]}...", flush=True)
 
